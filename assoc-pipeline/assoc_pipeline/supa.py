@@ -13,7 +13,10 @@ import requests
 
 class Supa:
     def __init__(self, url: str | None = None, key: str | None = None, timeout: int = 60):
-        self.url = (url or os.environ.get("SUPABASE_URL", "")).rstrip("/")
+        raw = (url or os.environ.get("SUPABASE_URL", "")).strip()
+        # Accept https://xyz.supabase.co, .../ or .../rest/v1/ : keep only scheme + host.
+        u = urllib.parse.urlparse(raw)
+        self.url = f"{u.scheme}://{u.netloc}" if u.scheme and u.netloc else raw.rstrip("/")
         self.key = key or os.environ.get("SUPABASE_SERVICE_KEY", "")
         if not self.url or not self.key:
             raise RuntimeError("Set SUPABASE_URL and SUPABASE_SERVICE_KEY")
@@ -51,6 +54,9 @@ class Supa:
         r = self.s.post(f"{self.url}/storage/v1/object/list/{bucket}",
                         json={"prefix": prefix, "limit": 100, "sortBy": {"column": "updated_at", "order": "desc"}},
                         timeout=self.timeout)
+        if r.status_code == 404:
+            raise RuntimeError(f"Storage returned 404 for bucket '{bucket}': {r.text[:200]}. "
+                               "Check the bucket name and that SUPABASE_URL is this project's Project URL.")
         r.raise_for_status()
         return [f for f in r.json() if f.get("id")]          # folders have no id
 

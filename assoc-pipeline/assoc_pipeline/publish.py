@@ -79,6 +79,9 @@ def main(argv=None):
     ap.add_argument("--run-dir", required=True, help="e.g. out/2026-11-02 (or out to pick the newest)")
     a = ap.parse_args(argv)
     run_dir = Path(a.run_dir)
+    if not run_dir.exists():
+        print(f"Nothing to publish: {run_dir} does not exist (an earlier step failed).", file=sys.stderr)
+        return 1
     if not (run_dir / "run_report.json").exists():
         dated = sorted(p for p in run_dir.iterdir() if (p / "run_report.json").exists())
         if not dated:

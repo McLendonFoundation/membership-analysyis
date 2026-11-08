@@ -61,7 +61,7 @@ def build(result: dict, yoy: dict | None, as_of: date) -> dict:
         direction.append({"action": f"Invite the top prospect institutions from the cross-association list",
                           "owner": f"{a} membership lead", "impact": "New institutions, warm because they already know NACDA"})
 
-    monday = _next_weekday(as_of, 0)
+    monday = as_of + timedelta(days=(7 - as_of.weekday()) % 7 or 7)
     agenda = [
         {"when": (as_of + timedelta(days=14)).isoformat(), "decision": "Agree on the follow-up list and owners"},
         {"when": (as_of + timedelta(days=30)).isoformat(), "decision": "Review renewals recovered from the lapsed list"},

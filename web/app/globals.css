@@ -1,0 +1,27 @@
+@import "tailwindcss";
+
+:root {
+  --navy: #242931;
+  --accent: #962a2e;
+  --ink: #1f2328;
+  --muted: #6b6f76;
+  --rule: #e2e3e6;
+  --tint: #f4f4f5;
+  --bg: #ffffff;
+}
+html, body { background: var(--bg); color: var(--ink); }
+body { font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
+em, i { font-style: normal; }
+.card { background: #fff; border: 1px solid var(--rule); border-radius: 10px; padding: 16px; }
+.kpi { background: var(--tint); border-top: 4px solid var(--accent); border-radius: 6px; padding: 12px 14px; }
+.btn { background: var(--navy); color: #fff; border-radius: 6px; padding: 8px 14px; font-weight: 600; font-size: 14px; }
+.btn:disabled { opacity: .5; }
+.btn-ghost { border: 1px solid var(--rule); border-radius: 6px; padding: 7px 12px; font-size: 14px; background: #fff; }
+.input { border: 1px solid var(--rule); border-radius: 6px; padding: 8px 10px; width: 100%; font-size: 14px; }
+.tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+.tbl th { text-align: left; background: var(--navy); color: #fff; padding: 6px 8px; font-weight: 600; position: sticky; top: 0; }
+.tbl td { padding: 6px 8px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+.tbl tr:nth-child(even) td { background: #fafafa; }
+.chip { background: var(--accent); color: #fff; border-radius: 4px; padding: 3px 9px; font-size: 12px; font-weight: 700; }
+.section-title { background: var(--navy); color: #fff; padding: 8px 12px; border-radius: 6px; font-weight: 700; letter-spacing: .02em; text-transform: uppercase; }
+.section-title b { color: #e6b7b9; margin-right: 6px; }

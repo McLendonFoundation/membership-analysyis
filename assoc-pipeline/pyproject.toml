@@ -4,7 +4,7 @@ version = "1.0.0"
 description = "NACDA association membership analysis pipeline"
 authors = [{name = "Ishita Tibrewal"}]
 requires-python = ">=3.10"
-dependencies = ["pandas>=2.2", "numpy>=1.26", "scipy>=1.11", "openpyxl>=3.1"]
+dependencies = ["pandas>=2.2", "numpy>=1.26", "scipy>=1.11", "openpyxl>=3.1", "requests>=2.31"]
 
 [project.scripts]
 assoc-pipeline = "assoc_pipeline.run:main"

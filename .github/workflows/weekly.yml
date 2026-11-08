@@ -1,6 +1,5 @@
 # Weekly membership run: Mondays 11:00 ET (15:00 UTC; 10:00 ET in winter), or on demand.
-# Until Phase 3 (Supabase) is live there is no automatic file source, so the data steps are skipped
-# unless the SUPABASE_URL secret exists. Member files are never committed to this repo.
+# Data steps run once the SUPABASE_URL and SUPABASE_SERVICE_KEY repo secrets exist. Member files are never committed to this repo.
 # Author: Ishita Tibrewal
 name: weekly-membership-run
 on:
@@ -21,8 +20,8 @@ jobs:
       run:
         working-directory: assoc-pipeline
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
           cache: pip
@@ -42,19 +41,21 @@ jobs:
 
       - name: Download this week's files
         if: steps.src.outputs.ready == 'true'
-        run: python -m assoc_pipeline.fetch --dest data   # added in Phase 3
+        run: python -m assoc_pipeline.fetch --dest data
 
       - name: Run pipeline
         if: steps.src.outputs.ready == 'true'
         run: |
           AS_OF="${{ github.event.inputs.as_of }}"; AS_OF="${AS_OF:-$(date +%F)}"
-          python -m assoc_pipeline.run --current data/current.xlsx --prior data/prior.xlsx \
-            --supplement data/supplement.xlsx --out out --as-of "$AS_OF" \
-            --previous-report data/previous_run_report.json
+          ARGS="--current data/current.xlsx --out out --as-of $AS_OF"
+          [ -f data/prior.xlsx ] && ARGS="$ARGS --prior data/prior.xlsx"
+          [ -f data/supplement.xlsx ] && ARGS="$ARGS --supplement data/supplement.xlsx"
+          [ -f data/previous_run_report.json ] && ARGS="$ARGS --previous-report data/previous_run_report.json"
+          python -m assoc_pipeline.run $ARGS
 
       - name: Load results to Supabase
-        if: steps.src.outputs.ready == 'true'
-        run: python -m assoc_pipeline.publish --run-dir out   # added in Phase 3
+        if: always() && steps.src.outputs.ready == 'true'
+        run: python -m assoc_pipeline.publish --run-dir out
 
       - name: Keep the run report (no member data)
         if: always() && steps.src.outputs.ready == 'true'

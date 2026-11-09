@@ -1,0 +1,75 @@
+# Weekly membership run: Mondays 11:00 ET (15:00 UTC; 10:00 ET in winter), or on demand.
+# Data steps run once the SUPABASE_URL and SUPABASE_SERVICE_KEY repo secrets exist. Member files are never committed to this repo.
+# Author: Ishita Tibrewal
+name: weekly-membership-run
+on:
+  schedule:
+    - cron: "0 15 * * 1"
+  workflow_dispatch:
+    inputs:
+      as_of:
+        description: "Report date (YYYY-MM-DD). Blank = today"
+        required: false
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+      MS_TENANT_ID: ${{ secrets.MS_TENANT_ID }}
+      MS_CLIENT_ID: ${{ secrets.MS_CLIENT_ID }}
+      MS_CLIENT_SECRET: ${{ secrets.MS_CLIENT_SECRET }}
+      SP_SITE: ${{ vars.SP_SITE }}
+      SP_FOLDER: ${{ vars.SP_FOLDER }}
+    defaults:
+      run:
+        working-directory: assoc-pipeline
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: assoc-pipeline/requirements.txt
+      - run: pip install -r requirements.txt
+      - run: pytest -q
+
+      - name: Check data source
+        id: src
+        run: |
+          if [ -z "$SUPABASE_URL" ]; then
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::No data source configured yet (Phase 3). Tests passed; skipping the data run."
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Copy Monday file from SharePoint
+        if: steps.src.outputs.ready == 'true'
+        run: python -m assoc_pipeline.sharepoint
+
+      - name: Download this week's files
+        if: steps.src.outputs.ready == 'true'
+        run: python -m assoc_pipeline.fetch --dest data
+
+      - name: Run pipeline
+        if: steps.src.outputs.ready == 'true'
+        run: |
+          AS_OF="${{ github.event.inputs.as_of }}"; AS_OF="${AS_OF:-$(date +%F)}"
+          ARGS="--current data/current.xlsx --out out --as-of $AS_OF"
+          [ -f data/prior.xlsx ] && ARGS="$ARGS --prior data/prior.xlsx"
+          [ -f data/supplement.xlsx ] && ARGS="$ARGS --supplement data/supplement.xlsx"
+          [ -f data/previous_run_report.json ] && ARGS="$ARGS --previous-report data/previous_run_report.json"
+          python -m assoc_pipeline.run $ARGS
+
+      - name: Load results to Supabase
+        if: always() && steps.src.outputs.ready == 'true'
+        run: python -m assoc_pipeline.publish --run-dir out
+
+      - name: Keep the run report (no member data)
+        if: always() && steps.src.outputs.ready == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: run-report
+          path: assoc-pipeline/out/*/run_report.json
+          retention-days: 30

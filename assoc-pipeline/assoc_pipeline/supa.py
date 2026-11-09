@@ -66,3 +66,8 @@ class Supa:
         with open(dest, "wb") as fh:
             fh.write(r.content)
         return dest
+
+    def upload(self, bucket: str, path: str, data: bytes, content_type: str = "application/octet-stream") -> None:
+        r = self.s.post(f"{self.url}/storage/v1/object/{bucket}/{urllib.parse.quote(path)}", data=data,
+                        headers={"Content-Type": content_type, "x-upsert": "true"}, timeout=self.timeout)
+        r.raise_for_status()

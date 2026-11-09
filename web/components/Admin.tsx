@@ -126,7 +126,9 @@ function Invites({ assns, invites, onChange, setMsg }: { assns: { code: string }
   const [days, setDays] = useState(30);
   const [uses, setUses] = useState(25);
   const [note, setNote] = useState("");
-  const link = (t: string) => `${typeof window !== "undefined" ? window.location.origin : ""}/signup?token=${t}`;
+  // Always build links on the public production address, never on a protected preview URL.
+  const base = process.env.NEXT_PUBLIC_SITE_URL || (typeof window !== "undefined" ? window.location.origin : "");
+  const link = (t: string) => `${base.replace(/\/$/, "")}/signup?token=${t}`;
 
   const create = async () => {
     const { data: { user } } = await sb.auth.getUser();

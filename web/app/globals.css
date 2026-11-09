@@ -25,3 +25,18 @@ em, i { font-style: normal; }
 .chip { background: var(--accent); color: #fff; border-radius: 4px; padding: 3px 9px; font-size: 12px; font-weight: 700; }
 .section-title { background: var(--navy); color: #fff; padding: 8px 12px; border-radius: 6px; font-weight: 700; letter-spacing: .02em; text-transform: uppercase; }
 .section-title b { color: #e6b7b9; margin-right: 6px; }
+
+/* ---------- Print / PDF report ---------- */
+.print-h3 { font-size: 16px; font-weight: 700; color: var(--accent); margin: 18px 0 8px; }
+@media print {
+  @page { size: Letter; margin: 0.5in; }
+  header, .no-print, nav { display: none !important; }
+  body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .card { break-inside: avoid; box-shadow: none; }
+  .print-block { break-before: page; }
+  .print-block:first-of-type { break-before: auto; }
+  .section-title { break-after: avoid; }
+  table.tbl th { position: static; }
+  .max-h-\[520px\] { max-height: none !important; overflow: visible !important; }
+  a { text-decoration: none; color: inherit; }
+}

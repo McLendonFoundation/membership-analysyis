@@ -15,16 +15,19 @@ export default function Admin({ myId, canTriggerRun }: { myId: string; canTrigge
   const [assns, setAssns] = useState<{ code: string }[]>([]);
   const [runs, setRuns] = useState<any[]>([]);
   const [portfolio, setPortfolio] = useState<any | null>(null);
+  const [links, setLinks] = useState<{ user_id: string; association_code: string }[]>([]);
   const [msg, setMsg] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    const [p, i, a, r, pf] = await Promise.all([
+    const [p, i, a, r, pf, pa] = await Promise.all([
       sb.from("profiles").select("*").order("created_at", { ascending: false }),
       sb.from("invites").select("*").order("created_at", { ascending: false }),
       sb.from("associations").select("code").order("code"),
       sb.from("pipeline_runs").select("as_of,status,created_at,report").order("created_at", { ascending: false }).limit(12),
       sb.from("portfolio_snapshots").select("*").order("as_of", { ascending: false }).limit(1).maybeSingle(),
+      sb.from("profile_associations").select("user_id,association_code"),
     ]);
+    setLinks(pa.data ?? []);
     setProfiles((p.data as Profile[]) ?? []); setInvites(i.data ?? []); setAssns(a.data ?? []);
     setRuns(r.data ?? []); setPortfolio(pf.data);
   }, []);
@@ -38,6 +41,18 @@ export default function Admin({ myId, canTriggerRun }: { myId: string; canTrigge
     const { error } = await sb.from("profiles").update(patch).eq("user_id", id);
     setMsg(error ? error.message : "Saved."); load();
   };
+
+  const assnOf = (id: string) => links.filter((l) => l.user_id === id).map((l) => l.association_code).sort();
+  const addAssn = async (id: string, code: string) => {
+    if (!code) return;
+    const { error } = await sb.from("profile_associations").insert({ user_id: id, association_code: code });
+    setMsg(error ? error.message : `Added ${code}.`); load();
+  };
+  const removeAssn = async (id: string, code: string) => {
+    const { error } = await sb.from("profile_associations").delete().eq("user_id", id).eq("association_code", code);
+    setMsg(error ? error.message : `Removed ${code}.`); load();
+  };
+  const rows = profiles.map((p) => ({ ...p, associations: assnOf(p.user_id).join(", ") }));
 
   return (
     <div>
@@ -59,11 +74,23 @@ export default function Admin({ myId, canTriggerRun }: { myId: string; canTrigge
 
       {tab === "Users" && (
         <Card title="Users" note="Approve people after checking they belong to the association they chose.">
-          <DataTable rows={profiles} searchKeys={["email", "full_name", "association_code"]}
+          <DataTable rows={rows} searchKeys={["email", "full_name", "associations"]}
             filters={[{ label: "Pending", test: (r) => r.status === "pending" }, { label: "Approved", test: (r) => r.status === "approved" }]}
             cols={[
               { key: "full_name", label: "Name" }, { key: "email", label: "Email" },
-              { key: "association_code", label: "Association" }, { key: "role", label: "Role" },
+              { key: "associations", label: "Associations", fmt: (_v, r) => (
+                <div className="flex flex-wrap gap-1 items-center">
+                  {assnOf(r.user_id).map((c) => (
+                    <span key={c} className="text-xs rounded px-1.5 py-0.5" style={{ background: "var(--tint)" }}>
+                      {c} <button title={`Remove ${c}`} onClick={() => removeAssn(r.user_id, c)} style={{ color: "var(--accent)" }}>×</button>
+                    </span>))}
+                  <select className="text-xs border rounded" style={{ borderColor: "var(--rule)" }} value=""
+                    onChange={(e) => addAssn(r.user_id, e.target.value)}>
+                    <option value="">+ add</option>
+                    {assns.filter((a) => !assnOf(r.user_id).includes(a.code)).map((a) => <option key={a.code} value={a.code}>{a.code}</option>)}
+                  </select>
+                </div>) },
+              { key: "role", label: "Role" },
               { key: "status", label: "Status" }, { key: "created_at", label: "Signed up", fmt: (v) => dateLabel(v) },
               { key: "user_id", label: "Actions", fmt: (id, r) => id === myId ? "You" : (
                 <div className="flex gap-1 flex-wrap">

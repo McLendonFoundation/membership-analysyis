@@ -10,12 +10,14 @@ export default async function Pending() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
   const { data: p } = await supabase.from("profiles").select("status,association_code").eq("user_id", user.id).maybeSingle();
+  const { data: pa } = await supabase.from("profile_associations").select("association_code").eq("user_id", user.id);
+  const list = (pa ?? []).map((r) => r.association_code).join(", ") || p?.association_code;
   if (p?.status === "approved") redirect("/");
   const text = !p
     ? "Your account isn't linked to an association yet. Please use your invite link again, or contact your NACDA admin."
     : p.status === "revoked"
       ? "Your access has been turned off. Contact your NACDA admin if you think this is a mistake."
-      : `Thanks for signing up for ${p.association_code}. An admin will approve your access shortly; you'll be able to sign in to see your dashboard once approved.`;
+      : `Thanks for signing up for ${list}. An admin will approve your access shortly; you'll be able to sign in to see your dashboard once approved.`;
   return (
     <AuthCard title={p?.status === "revoked" ? "Access turned off" : "Awaiting approval"}>
       <p className="text-sm">{text}</p>

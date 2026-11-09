@@ -20,8 +20,12 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   if (isAdmin) {
     const { data } = await supabase.from("association_snapshots").select("association_code").order("association_code");
     codes = Array.from(new Set((data ?? []).map((r) => r.association_code)));
+  } else {
+    const { data } = await supabase.from("profile_associations").select("association_code").eq("user_id", user.id).order("association_code");
+    codes = (data ?? []).map((r) => r.association_code);
+    if (!codes.length && profile.association_code) codes = [profile.association_code];
   }
-  const assn = isAdmin ? (sp.a && codes.includes(sp.a) ? sp.a : codes[0]) : profile.association_code;
+  const assn = sp.a && codes.includes(sp.a) ? sp.a : codes[0];
 
   const { data: snap } = await supabase.from("association_snapshots").select("payload,as_of")
     .eq("association_code", assn).order("as_of", { ascending: false }).limit(1).maybeSingle();
@@ -32,7 +36,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   if (!snap) {
     return (
       <Shell title={assn ?? "Dashboard"} isAdmin={isAdmin}>
-        {isAdmin && <AssociationPicker codes={codes} current={assn} />}
+        {codes.length > 1 && <AssociationPicker codes={codes} current={assn} isAdmin={isAdmin} />}
         <div className="card mt-4">No data has been published for this association yet. It appears after the next weekly run.</div>
       </Shell>
     );
@@ -40,7 +44,10 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   return (
     <Shell title={`${assn}${brand?.name ? `: ${brand.name}` : ""} Membership`}
       subtitle={`Data as of ${dateLabel(snap.as_of)} · Source: ${snap.payload.meta?.source ?? "weekly export"}`} isAdmin={isAdmin}>
-      {isAdmin && <AssociationPicker codes={codes} current={assn} />}
+      {codes.length > 1 && <AssociationPicker codes={codes} current={assn} isAdmin={isAdmin} />}
+      <div className="flex justify-end -mt-2 mb-2 no-print">
+        <a className="btn" href={`/report?a=${encodeURIComponent(assn ?? "")}`} target="_blank">Download report (PDF)</a>
+      </div>
       <Dashboard snap={snap.payload} lapsed={lapsed ?? []} accent={brand?.branding?.accent} />
     </Shell>
   );

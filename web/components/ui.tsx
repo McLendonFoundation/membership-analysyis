@@ -103,7 +103,7 @@ export function DataTable({ rows, cols, csvName, searchKeys, filters, pageSize =
 
   return (
     <div>
-      <div className="flex flex-wrap gap-2 items-center mb-2">
+      <div className="flex flex-wrap gap-2 items-center mb-2 no-print">
         {searchKeys && <input className="input" style={{ maxWidth: 260 }} placeholder="Search" value={q} onChange={(e) => { setQ(e.target.value); setPage(0); }} />}
         {filters?.map((fl, i) => (
           <button key={fl.label} className="btn-ghost" style={f === i ? { background: "var(--navy)", color: "#fff" } : {}}
@@ -125,7 +125,7 @@ export function DataTable({ rows, cols, csvName, searchKeys, filters, pageSize =
         </table>
       </div>
       {pages > 1 && (
-        <div className="flex gap-2 items-center mt-2 text-sm">
+        <div className="flex gap-2 items-center mt-2 text-sm no-print">
           <button className="btn-ghost" disabled={page === 0} onClick={() => setPage(page - 1)}>Previous</button>
           <span>Page {page + 1} of {pages}</span>
           <button className="btn-ghost" disabled={page >= pages - 1} onClick={() => setPage(page + 1)}>Next</button>

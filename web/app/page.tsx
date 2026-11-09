@@ -12,9 +12,10 @@ export default async function Home() {
 
   // First login after email confirmation: finish the invite using what was saved at sign-up.
   const meta = user.user_metadata ?? {};
-  if (!profile && meta.invite_token && meta.association_code) {
-    await supabase.rpc("redeem_invite", {
-      p_token: meta.invite_token, p_association: meta.association_code, p_full_name: meta.full_name ?? null,
+  const codes: string[] = meta.association_codes ?? (meta.association_code ? [meta.association_code] : []);
+  if (!profile && meta.invite_token && codes.length) {
+    await supabase.rpc("redeem_invite_multi", {
+      p_token: meta.invite_token, p_associations: codes, p_full_name: meta.full_name ?? null,
     });
     ({ data: profile } = await supabase.from("profiles").select("*").eq("user_id", user.id).maybeSingle());
   }

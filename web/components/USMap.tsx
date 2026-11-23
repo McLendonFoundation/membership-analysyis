@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { geoAlbersUsa, geoPath } from "d3-geo";
 import { feature } from "topojson-client";
 import statesTopo from "us-atlas/states-10m.json";
+import { useChartColor } from "@/components/ui";
 
 const FIPS: Record<string, string> = {
   "01":"AL","02":"AK","04":"AZ","05":"AR","06":"CA","08":"CO","09":"CT","10":"DE","11":"DC","12":"FL","13":"GA","15":"HI",
@@ -18,7 +19,9 @@ type Props = {
   color?: string;
 };
 
-export default function USMap({ values, label, color = "#242931" }: Props) {
+export default function USMap({ values, label, color: colorProp }: Props) {
+  const chart = useChartColor();
+  const color = colorProp ?? chart;
   const [hover, setHover] = useState<{ s: string; x: number; y: number } | null>(null);
   const { paths, max } = useMemo(() => {
     const geo = feature(statesTopo as any, (statesTopo as any).objects.states) as any;

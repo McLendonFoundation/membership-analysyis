@@ -1,10 +1,14 @@
 "use client";
-import { useMemo, useState } from "react";
+import { createContext, useContext, useMemo, useState } from "react";
 import { Bar, BarChart, CartesianGrid, Cell, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { downloadCsv } from "@/lib/format";
 
-export const NAVY = "#242931";
+export const NAVY = "#111111";
 export const MUTED = "#c8c9cc";
+
+/** Chart color for the current association. Dashboard provides it; defaults to NACDA black. */
+export const ChartColor = createContext<string>(NAVY);
+export const useChartColor = () => useContext(ChartColor);
 
 export function Kpi({ value, label }: { value: string; label: string }) {
   return (
@@ -44,9 +48,11 @@ export function ComingSoon({ what }: { what: string }) {
 }
 
 /** Horizontal bar chart. value is a number; fmt formats labels/tooltips. */
-export function HBar({ data, label, value, fmt, reference, refLabel, highlight, accent = "#962a2e", height }:
+export function HBar({ data, label, value, fmt, reference, refLabel, highlight, accent, height }:
   { data: any[]; label: string; value: string; fmt: (v: number) => string; reference?: number; refLabel?: string;
     highlight?: (d: any) => boolean; accent?: string; height?: number }) {
+  const main = useChartColor();
+  const refColor = accent ?? main;
   const h = height ?? Math.max(160, data.length * 28 + 40);
   return (
     <ResponsiveContainer width="100%" height={h}>
@@ -55,17 +61,18 @@ export function HBar({ data, label, value, fmt, reference, refLabel, highlight, 
         <XAxis type="number" tickFormatter={fmt} fontSize={11} />
         <YAxis type="category" dataKey={label} width={190} fontSize={11} interval={0} />
         <Tooltip formatter={(v: any) => fmt(Number(v))} />
-        {reference != null && <ReferenceLine x={reference} stroke={accent} strokeDasharray="4 3" label={{ value: refLabel, fontSize: 10, fill: accent, position: "top" }} />}
+        {reference != null && <ReferenceLine x={reference} stroke={refColor} strokeDasharray="4 3" label={{ value: refLabel, fontSize: 10, fill: refColor, position: "top" }} />}
         <Bar dataKey={value} radius={[0, 3, 3, 0]} label={{ position: "right", fontSize: 10, formatter: (v: any) => fmt(Number(v)) }}>
-          {data.map((d, i) => <Cell key={i} fill={highlight ? (highlight(d) ? NAVY : MUTED) : NAVY} />)}
+          {data.map((d, i) => <Cell key={i} fill={highlight ? (highlight(d) ? main : MUTED) : main} />)}
         </Bar>
       </BarChart>
     </ResponsiveContainer>
   );
 }
 
-export function VBar({ data, x, y, fmt = (v: number) => v.toLocaleString(), color = NAVY }:
+export function VBar({ data, x, y, fmt = (v: number) => v.toLocaleString(), color }:
   { data: any[]; x: string; y: string; fmt?: (v: number) => string; color?: string }) {
+  const main = useChartColor();
   return (
     <ResponsiveContainer width="100%" height={240}>
       <BarChart data={data} margin={{ top: 18, right: 8, left: 0, bottom: 4 }}>
@@ -73,7 +80,7 @@ export function VBar({ data, x, y, fmt = (v: number) => v.toLocaleString(), colo
         <XAxis dataKey={x} fontSize={11} />
         <YAxis fontSize={11} />
         <Tooltip formatter={(v: any) => fmt(Number(v))} />
-        <Bar dataKey={y} fill={color} radius={[3, 3, 0, 0]} label={{ position: "top", fontSize: 10 }} />
+        <Bar dataKey={y} fill={color ?? main} radius={[3, 3, 0, 0]} label={{ position: "top", fontSize: 10 }} />
       </BarChart>
     </ResponsiveContainer>
   );

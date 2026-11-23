@@ -1,7 +1,8 @@
 "use client";
 import { useMemo, useState } from "react";
 import USMap from "@/components/USMap";
-import { Card, ComingSoon, DataTable, HBar, Kpi, Section, VBar } from "@/components/ui";
+import { Card, ChartColor, ComingSoon, DataTable, HBar, Kpi, Section, VBar } from "@/components/ui";
+import { brandVars, type Brand } from "@/lib/brand";
 import { num, pct } from "@/lib/format";
 import type { Snapshot } from "@/lib/types";
 
@@ -14,7 +15,7 @@ const METRICS = {
   members_per_org: { label: "Members per organization", fmt: (v: number) => v?.toFixed(1) },
 } as const;
 
-export default function Dashboard({ snap, lapsed, accent, printMode = false }: { snap: Snapshot; lapsed: any[]; accent?: string; printMode?: boolean }) {
+export default function Dashboard({ snap, lapsed, brand, printMode = false }: { snap: Snapshot; lapsed: any[]; brand?: Brand; printMode?: boolean }) {
   const [tab, setTab] = useState<Tab>("Geography");
   const [metric, setMetric] = useState<keyof typeof METRICS>("members");
   const [region, setRegion] = useState("All");
@@ -31,10 +32,11 @@ export default function Dashboard({ snap, lapsed, accent, printMode = false }: {
   const H = ({ t }: { t: Tab }) => (printMode ? <h3 className="print-h3">{t}</h3> : null);
 
   return (
-    <div>
+    <ChartColor.Provider value={brand?.primary ?? "#111111"}>
+    <div style={brand ? brandVars(brand) : undefined}>
       <div className="flex gap-2 flex-wrap no-print">
         {[["N", "Narrative"], ["A", "Analysis"], ["C", "Causes"], ["D", "Direction"], ["A", "Agenda"]].map(([l, w]) => (
-          <a key={w} href={`#${w.toLowerCase()}`} className="chip" style={accent ? { background: accent } : {}}>{l} <span className="font-normal opacity-90">{w}</span></a>
+          <a key={w} href={`#${w.toLowerCase()}`} className="chip">{l} <span className="font-normal opacity-90">{w}</span></a>
         ))}
       </div>
 
@@ -222,5 +224,6 @@ export default function Dashboard({ snap, lapsed, accent, printMode = false }: {
         <DataTable rows={nacda.agenda} cols={[{ key: "when", label: "When" }, { key: "decision", label: "Decision or checkpoint" }]} />
       </Section></div>
     </div>
+    </ChartColor.Provider>
   );
 }

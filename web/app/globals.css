@@ -1,8 +1,12 @@
 @import "tailwindcss";
 
 :root {
-  --navy: #242931;
-  --accent: #962a2e;
+  /* Defaults are NACDA (black, gold, white). Association pages override these via lib/brand.ts. */
+  --navy: #111111;
+  --accent: #ffb700;
+  --accent-fg: #111111;
+  --accent-ink: #7a5800;
+  --on-navy: #ffb700;
   --ink: #1f2328;
   --muted: #6b6f76;
   --rule: #e2e3e6;
@@ -22,12 +26,12 @@ em, i { font-style: normal; }
 .tbl th { text-align: left; background: var(--navy); color: #fff; padding: 6px 8px; font-weight: 600; position: sticky; top: 0; }
 .tbl td { padding: 6px 8px; border-bottom: 1px solid var(--rule); vertical-align: top; }
 .tbl tr:nth-child(even) td { background: #fafafa; }
-.chip { background: var(--accent); color: #fff; border-radius: 4px; padding: 3px 9px; font-size: 12px; font-weight: 700; }
+.chip { background: var(--accent); color: var(--accent-fg); border-radius: 4px; padding: 3px 9px; font-size: 12px; font-weight: 700; }
 .section-title { background: var(--navy); color: #fff; padding: 8px 12px; border-radius: 6px; font-weight: 700; letter-spacing: .02em; text-transform: uppercase; }
-.section-title b { color: #e6b7b9; margin-right: 6px; }
+.section-title b { color: var(--on-navy); margin-right: 6px; }
 
 /* ---------- Print / PDF report ---------- */
-.print-h3 { font-size: 16px; font-weight: 700; color: var(--accent); margin: 18px 0 8px; }
+.print-h3 { font-size: 16px; font-weight: 700; color: var(--accent-ink); margin: 18px 0 8px; }
 @media print {
   @page { size: Letter; margin: 0.5in; }
   header, .no-print, nav { display: none !important; }

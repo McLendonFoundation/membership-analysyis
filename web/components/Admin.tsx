@@ -172,7 +172,7 @@ function Invites({ assns, invites, onChange, setMsg }: { assns: { code: string }
 function WeeklyData({ runs, canTriggerRun, onChange, setMsg }: { runs: any[]; canTriggerRun: boolean; onChange: () => void; setMsg: (m: string) => void }) {
   const sb = supabaseBrowser();
   const [busy, setBusy] = useState(false);
-  const upload = async (slot: "current" | "prior" | "supplement", file: File | undefined) => {
+  const upload = async (slot: "current" | "prior" | "supplement" | "roster", file: File | undefined) => {
     if (!file) return;
     setBusy(true);
     const stamp = new Date().toISOString().slice(0, 10);
@@ -190,11 +190,11 @@ function WeeklyData({ runs, canTriggerRun, onChange, setMsg }: { runs: any[]; ca
   return (
     <div className="grid lg:grid-cols-3 gap-4">
       <Card title="Upload files" note="The newest file in each slot is used. Only the current file is needed each week.">
-        {(["current", "prior", "supplement"] as const).map((slot) => (
+        {(["current", "prior", "supplement", "roster"] as const).map((slot) => (
           <label key={slot} className="block text-sm mb-3">
             <span className="font-semibold capitalize">{slot}</span>
             <span className="text-xs block" style={{ color: "var(--muted)" }}>
-              {slot === "current" ? "This week's All Paids export" : slot === "prior" ? "Last year's FINAL paid list (once a year)" : "Optional: file with paid date and total years"}
+              {slot === "current" ? "This week's All Paids export" : slot === "prior" ? "Last year's FINAL paid list (once a year)" : slot === "roster" ? "School list with tabs D1, D2, D3, NAIA (when schools or conferences change)" : "Optional: file with paid date and total years"}
             </span>
             <input type="file" accept=".xlsx,.xls,.csv" disabled={busy} onChange={(e) => upload(slot, e.target.files?.[0])} className="text-xs mt-1" />
           </label>

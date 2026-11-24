@@ -4,6 +4,7 @@ import Dashboard from "@/components/Dashboard";
 import AssociationPicker from "@/components/AssociationPicker";
 import { supabaseServer } from "@/lib/supabase/server";
 import { dateLabel } from "@/lib/format";
+import { brandFor } from "@/lib/brand";
 
 export const dynamic = "force-dynamic";
 
@@ -33,9 +34,11 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const { data: lapsed } = await supabase.from("lapsed_members").select("*").eq("association_code", assn)
     .order("organization").limit(10000);
 
+  const theme = brandFor(assn, brand?.branding);
+
   if (!snap) {
     return (
-      <Shell title={assn ?? "Dashboard"} isAdmin={isAdmin}>
+      <Shell title={assn ?? "Dashboard"} isAdmin={isAdmin} brand={theme}>
         {codes.length > 1 && <AssociationPicker codes={codes} current={assn} isAdmin={isAdmin} />}
         <div className="card mt-4">No data has been published for this association yet. It appears after the next weekly run.</div>
       </Shell>
@@ -43,12 +46,12 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   }
   return (
     <Shell title={`${assn}${brand?.name ? `: ${brand.name}` : ""} Membership`}
-      subtitle={`Data as of ${dateLabel(snap.as_of)} · Source: ${snap.payload.meta?.source ?? "weekly export"}`} isAdmin={isAdmin}>
+      subtitle={`Data as of ${dateLabel(snap.as_of)} · Source: ${snap.payload.meta?.source ?? "weekly export"}`} isAdmin={isAdmin} brand={theme}>
       {codes.length > 1 && <AssociationPicker codes={codes} current={assn} isAdmin={isAdmin} />}
       <div className="flex justify-end -mt-2 mb-2 no-print">
         <a className="btn" href={`/report?a=${encodeURIComponent(assn ?? "")}`} target="_blank">Download report (PDF)</a>
       </div>
-      <Dashboard snap={snap.payload} lapsed={lapsed ?? []} accent={brand?.branding?.accent} />
+      <Dashboard snap={snap.payload} lapsed={lapsed ?? []} brand={theme} />
     </Shell>
   );
 }
